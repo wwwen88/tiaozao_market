@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}我的订单 - 跳蚤市场{% endblock %}
+
+{% block content %}
+<div class="order-container">
+    <h2 class="order-title">📋 我的订单</h2>
+    
+    {% if orderInfos %}
+    <div class="order-list">
+        {% for order in orderInfos %}
+        <div class="order-card">
+            <div class="order-header">
+                <div class="order-id">订单号：{{ order.id }}</div>
+                <div class="order-date">{{ order.create_time|date:"Y-m-d H:i:s" }}</div>
+            </div>
+            <div class="order-body">
+                <div class="order-price">¥{{ order.price }}</div>
+                <div class="order-state">
+                    {% if order.state == "待支付" %}
+                    <span class="state pending">{{ order.state }}</span>
+                    {% elif order.state == "已支付" %}
+                    <span class="state paid">{{ order.state }}</span>
+                    {% elif order.state == "发货中" %}
+                    <span class="state shipping">{{ order.state }}</span>
+                    {% else %}
+                    <span class="state">{{ order.state }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-order">
+        <p>暂无订单</p>
+        <a href="{% url 'goods:index' %}" class="btn-shop">去逛逛</a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .order-container {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+    .order-title {
+        font-size: 24px;
+        margin-bottom: 25px;
+        color: #333;
+    }
+    .order-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    .order-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #eee;
+        margin-bottom: 12px;
+        color: #666;
+        font-size: 14px;
+    }
+    .order-body {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .order-price {
+        font-size: 18px;
+        font-weight: bold;
+        color: #ff5722;
+    }
+    .state {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+    }
+    .state.pending {
+        background: #fff3e0;
+        color: #ff9800;
+    }
+    .state.paid {
+        background: #e8f5e9;
+        color: #4caf50;
+    }
+    .state.shipping {
+        background: #e3f2fd;
+        color: #2196f3;
+    }
+    .empty-order {
+        text-align: center;
+        padding: 60px;
+        background: white;
+        border-radius: 12px;
+    }
+    .btn-shop {
+        display: inline-block;
+        margin-top: 15px;
+        padding: 10px 25px;
+        background: #667eea;
+        color: white;
+        text-decoration: none;
+        border-radius: 25px;
+    }
+</style>
+{% endblock %}

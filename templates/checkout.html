@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="checkout-container">
+    <h2 class="checkout-title">📋 确认订单</h2>
+
+    <!-- 收货地址 -->
+    <div class="address-section">
+        <h3>收货地址</h3>
+        <div class="address-list">
+            {% for address in address_list %}
+            <div class="address-card {% if address.is_default %}active{% endif %}" data-address-id="{{ address.id }}">
+                <div class="address-info">
+                    <div class="receiver">{{ address.receiver }} {{ address.phone }}</div>
+                    <div class="address">{{ address.province }}{{ address.city }}{{ address.district }}{{ address.detail }}</div>
+                </div>
+                {% if address.is_default %}<div class="default-tag">默认</div>{% endif %}
+                <div class="address-radio">
+                    <input type="radio" name="address_id" value="{{ address.id }}" {% if address.is_default %}checked{% endif %}>
+                </div>
+            </div>
+            {% empty %}
+            <div class="no-address">
+                <p>暂无收货地址</p>
+                <a href="{% url 'goods:address_add' %}" class="add-address-btn">+ 添加地址</a>
+            </div>
+            {% endfor %}
+        </div>
+        <a href="{% url 'goods:address_add' %}" class="add-new-address">+ 添加新地址</a>
+    </div>
+
+    <!-- 商品列表 -->
+    <div class="order-items">
+        <h3>商品清单</h3>
+        <table class="order-table">
+            <thead>
+                <tr><th>商品</th><th>单价</th><th>数量</th><th>小计</th></tr>
+            </thead>
+            <tbody>
+                {% for cart, good in sumlist %}
+                <tr>
+                    <td class="product-cell">
+                        <img src="{{ MEDIA_URL }}{{ good.image }}" class="product-thumb">
+                        <span>{{ good.name }}</span>
+                    </td>
+                    <td>¥{{ good.price }}</td>
+                    <td>{{ cart.num }}</td>
+                    <td>¥{% widthratio good.price 1 cart.num %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 订单金额 -->
+    <div class="order-summary">
+        <div class="summary-row">商品总价：¥{{ total_price }}</div>
+        <div class="summary-row">运费：免运费</div>
+        <div class="summary-row total">应付总额：¥{{ total_price }}</div>
+    </div>
+
+    <!-- 提交订单 -->
+    <form action="{% url 'goods:confirm_checkout' %}" method="post" class="submit-form">
+        {% csrf_token %}
+        <input type="hidden" name="selected_address_id" id="selected_address_id"
+               value="{% for a in address_list %}{% if a.is_default %}{{ a.id }}{% endif %}{% endfor %}">
+        <button type="submit" class="submit-btn" {% if not address_list %}disabled{% endif %}>
+            提交订单
+        </button>
+    </form>
+</div>
+
+<style>
+    .checkout-container { max-width: 1000px; margin: 0 auto; background: white; border-radius: 16px; padding: 30px; }
+    .checkout-title { font-size: 24px; margin-bottom: 25px; }
+    .address-section { margin-bottom: 30px; }
+    .address-list { display: flex; flex-wrap: wrap; gap: 15px; margin: 15px 0; }
+    .address-card { position: relative; width: 300px; padding: 15px; border: 2px solid #eee; border-radius: 12px; cursor: pointer; }
+    .address-card.active { border-color: #667eea; background: #f8f7ff; }
+    .default-tag { position: absolute; top: 10px; right: 10px; background: #667eea; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+    .address-radio { position: absolute; bottom: 10px; right: 10px; }
+    .address-radio input { cursor: pointer; }
+    .add-new-address { display: inline-block; margin-top: 10px; color: #667eea; text-decoration: none; }
+    .order-table { width: 100%; border-collapse: collapse; }
+    .order-table th, .order-table td { padding: 12px; text-align: center; border-bottom: 1px solid #eee; }
+    .product-cell { display: flex; align-items: center; gap: 10px; }
+    .product-thumb { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; }
+    .order-summary { text-align: right; margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 12px; }
+    .summary-row { margin-bottom: 10px; }
+    .total { font-size: 20px; font-weight: bold; color: #ff5722; }
+    .submit-btn { width: 100%; padding: 15px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+</style>
+
+<script>
+    document.querySelectorAll('.address-card').forEach(card => {
+        card.addEventListener('click', function() {
+            document.querySelectorAll('.address-card').forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+            const radio = this.querySelector('input[type="radio"]');
+            if (radio) radio.checked = true;
+            document.getElementById('selected_address_id').value = this.dataset.addressId;
+        });
+    });
+</script>
+{% endblock %}

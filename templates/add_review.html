@@ -1,0 +1,262 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}发表评价 - 跳蚤市场{% endblock %}
+
+{% block content %}
+<div class="review-container">
+    <div class="review-card">
+        <h2 class="review-title">📝 评价商品</h2>
+        
+        <!-- 商品信息 -->
+        <div class="product-info-mini">
+            <img src="{{ MEDIA_URL }}{{ product.image }}" alt="{{ product.name }}" class="product-thumb"
+                 onerror="this.src='https://picsum.photos/id/20/300/300'">
+            <div>
+                <h3>{{ product.name }}</h3>
+                <p class="product-price-mini">¥{{ product.price }}</p>
+            </div>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-error{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post" class="review-form">
+            {% csrf_token %}
+
+            <!-- 评分 -->
+            <div class="form-group rating-group">
+                <label>评分：</label>
+                <div class="star-rating">
+                    <input type="radio" id="star5" name="rating" value="5" {% if form.rating.value == 5 %}checked{% endif %}>
+                    <label for="star5" title="5星">★</label>
+
+                    <input type="radio" id="star4" name="rating" value="4" {% if form.rating.value == 4 %}checked{% endif %}>
+                    <label for="star4" title="4星">★</label>
+
+                    <input type="radio" id="star3" name="rating" value="3" {% if form.rating.value == 3 %}checked{% endif %}>
+                    <label for="star3" title="3星">★</label>
+
+                    <input type="radio" id="star2" name="rating" value="2" {% if form.rating.value == 2 %}checked{% endif %}>
+                    <label for="star2" title="2星">★</label>
+
+                    <input type="radio" id="star1" name="rating" value="1" {% if form.rating.value == 1 %}checked{% endif %}>
+                    <label for="star1" title="1星">★</label>
+                </div>
+                <span class="rating-hint" id="rating-hint">
+                    {% if form.rating.value %}
+                        {% if form.rating.value == 5 %}非常满意 ⭐{% elif form.rating.value == 4 %}满意 ⭐{% elif form.rating.value == 3 %}一般 ⭐{% elif form.rating.value == 2 %}较差 ⭐{% else %}很差 ⭐{% endif %}
+                    {% else %}
+                        请选择评分
+                    {% endif %}
+                </span>
+            </div>
+
+            <!-- 评价内容 -->
+            <div class="form-group">
+                <label for="content">评价内容：</label>
+                <textarea id="content" name="content" class="form-control" rows="5"
+                          placeholder="请分享您对商品的真实体验..." required>{{ form.content.value|default:'' }}</textarea>
+            </div>
+
+            <!-- 匿名评价 -->
+            <div class="form-group checkbox-group">
+                <input type="checkbox" id="is_anonymous" name="is_anonymous" {% if form.is_anonymous.value %}checked{% endif %}>
+                <label for="is_anonymous">🙈 匿名评价</label>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">✅ 提交评价</button>
+                <a href="{% url 'goods:detail' product.id %}" class="btn btn-secondary">↩️ 返回</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .review-container {
+        max-width: 700px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+    .review-card {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+    .review-title {
+        font-size: 24px;
+        margin-bottom: 20px;
+        color: #333;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 15px;
+    }
+    .product-info-mini {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 12px;
+        margin-bottom: 25px;
+    }
+    .product-thumb {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+    .product-price-mini {
+        color: #ff5722;
+        font-weight: bold;
+        font-size: 18px;
+    }
+    .rating-group {
+        margin-bottom: 20px;
+    }
+    .rating-group label {
+        display: block;
+        margin-bottom: 10px;
+        font-weight: 500;
+        color: #333;
+    }
+    .star-rating {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-start;
+        font-size: 40px;
+        gap: 5px;
+    }
+    .star-rating input {
+        display: none;
+    }
+    .star-rating label {
+        color: #ddd;
+        cursor: pointer;
+        transition: color 0.3s;
+    }
+    .star-rating label:hover,
+    .star-rating label:hover ~ label,
+    .star-rating input:checked ~ label {
+        color: #ffc107 !important;
+    }
+    .rating-hint {
+        display: block;
+        margin-top: 10px;
+        color: #999;
+        font-size: 14px;
+    }
+    .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 15px 0;
+    }
+    .checkbox-group input {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+    }
+    .checkbox-group label {
+        cursor: pointer;
+        font-size: 14px;
+        color: #666;
+    }
+    .form-actions {
+        display: flex;
+        gap: 15px;
+        margin-top: 25px;
+    }
+    .btn {
+        flex: 1;
+        padding: 12px;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        cursor: pointer;
+        text-align: center;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102,126,234,0.4);
+    }
+    .btn-secondary {
+        background: #f5f5f5;
+        color: #666;
+    }
+    .btn-secondary:hover {
+        background: #e0e0e0;
+    }
+    .form-control {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        font-size: 14px;
+        transition: all 0.3s;
+        font-family: inherit;
+    }
+    .form-control:focus {
+        border-color: #667eea;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+    }
+    .alert {
+        padding: 12px 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    .alert-success {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+    .alert-error {
+        background: #ffebee;
+        color: #c62828;
+    }
+
+    @media (max-width: 600px) {
+        .review-card {
+            padding: 20px;
+        }
+        .star-rating {
+            font-size: 30px;
+        }
+        .product-info-mini {
+            flex-direction: column;
+            text-align: center;
+        }
+        .form-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const stars = document.querySelectorAll('.star-rating input');
+        const hint = document.getElementById('rating-hint');
+        const labels = ['很差', '较差', '一般', '满意', '非常满意'];
+
+        stars.forEach(input => {
+            input.addEventListener('change', function() {
+                const value = parseInt(this.value);
+                hint.textContent = labels[value - 1] + ' ⭐';
+                hint.style.color = '#ffc107';
+            });
+        });
+    });
+</script>
+{% endblock %}

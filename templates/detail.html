@@ -1,0 +1,518 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}跳蚤市场 - {{ shangpin.name }}{% endblock %}
+
+{% block content %}
+<div class="product-detail-container">
+    <div class="product-main">
+        <div class="product-gallery">
+            <div class="main-image">
+                <img src="{{ MEDIA_URL }}{{ shangpin.image }}" alt="{{ shangpin.name }}" class="product-image"
+                     onerror="this.src='https://picsum.photos/id/20/300/300'">
+            </div>
+        </div>
+
+        <div class="product-info">
+            <h1 class="product-title">{{ shangpin.name }}</h1>
+            <p class="product-caption">{{ shangpin.caption }}</p>
+
+            <div class="product-meta">
+                <div class="meta-row">
+                    <span class="meta-label">价格：</span>
+                    <span class="price">¥{{ shangpin.price }}</span>
+                </div>
+                <div class="meta-row">
+                    <span class="meta-label">库存：</span>
+                    <span class="stock">{{ shangpin.stock }}件</span>
+                </div>
+                <div class="meta-row">
+                    <span class="meta-label">销量：</span>
+                    <span>{{ shangpin.sales }}件</span>
+                </div>
+
+                {% if guiges %}
+                <div class="meta-row">
+                    <span class="meta-label">规格：</span>
+                    <div class="spec-options">
+                        {% for guige in guiges %}
+                        <label class="spec-option">
+                            <input type="radio" name="guige_id" value="{{ guige.id }}" {% if forloop.first %}checked{% endif %}>
+                            <span class="spec-name">{{ guige.name }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="meta-row">
+                    <span class="meta-label">数量：</span>
+                    <div class="quantity-control">
+                        <button type="button" class="quantity-btn minus">-</button>
+                        <input type="number" id="quantity-input" value="1" min="1" max="{{ shangpin.stock }}" class="quantity-input">
+                        <button type="button" class="quantity-btn plus">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button type="button" class="btn add-to-cart" id="add-to-cart-btn">🛒 加入购物车</button>
+                <button type="button" class="btn buy-now" id="buy-now-btn">⚡ 立即购买</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 商品详情 -->
+    <div class="product-detail">
+        <h3 class="detail-title">📖 商品详情</h3>
+        <div class="detail-content">
+            {% if detail_images %}
+                {% for img in detail_images %}
+                    <img src="{{ MEDIA_URL }}{{ img.image }}" class="detail-image">
+                {% endfor %}
+            {% else %}
+                <img src="{{ MEDIA_URL }}{{ shangpin.image }}" class="detail-image">
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ===================== ⭐ 商品评价区域 ===================== -->
+    <div class="product-reviews">
+        <h3 class="detail-title">⭐ 商品评价</h3>
+
+        <!-- 发表评价按钮 -->
+        {% if user_has_purchased and not user_has_reviewed %}
+        <div class="review-action">
+            <a href="{% url 'goods:add_review' shangpin.id %}" class="btn-review">📝 发表评价</a>
+        </div>
+        {% elif not user_has_purchased %}
+        <div class="review-tip">💡 购买该商品后即可评价</div>
+        {% elif user_has_reviewed %}
+        <div class="review-tip" style="background:#e8f5e9; color:#2e7d32;">
+            ✅ 您已评价过该商品，可编辑或删除
+        </div>
+        {% endif %}
+
+        <!-- 评价统计 -->
+        <div class="review-stats">
+            <div>
+                <span class="stars">
+                    {% for i in "12345" %}
+                        {% if i|add:0 <= average_rating|floatformat:0 %}★{% else %}☆{% endif %}
+                    {% endfor %}
+                </span>
+                <span style="font-weight:bold; font-size:18px;">{{ average_rating|floatformat:1 }}</span>
+                <span style="color:#999;">({{ review_count }}条评价)</span>
+            </div>
+        </div>
+
+        <!-- 评价列表 -->
+        <div class="review-list">
+            {% for review in reviews %}
+            <div class="review-item">
+                <div class="review-header">
+                    <span>
+                        {% if review.is_anonymous %}
+                            🙈 匿名用户
+                        {% else %}
+                            👤 {{ review.user.username }}
+                        {% endif %}
+                        <span class="review-rating">
+                            {% for i in "12345" %}
+                                {% if i|add:0 <= review.rating %}★{% else %}☆{% endif %}
+                            {% endfor %}
+                        </span>
+                    </span>
+                    <span style="color:#999; font-size:13px;">{{ review.created_at|date:"Y-m-d H:i" }}</span>
+                </div>
+                <div class="review-content">{{ review.content|linebreaks }}</div>
+                {% if review.user == request.user %}
+                <div class="review-actions">
+                    <a href="{% url 'goods:add_review' shangpin.id %}">✏️ 编辑</a>
+                    <a href="{% url 'goods:delete_review' review.id %}" onclick="return confirm('确定删除这条评价吗？')">🗑️ 删除</a>
+                </div>
+                {% endif %}
+            </div>
+            {% empty %}
+            <div class="no-reviews">📭 暂无评价，快来发表第一条评价吧~</div>
+            {% endfor %}
+        </div>
+    </div>
+    <!-- ===================== 评价区域结束 ===================== -->
+</div>
+
+<!-- 隐藏的 CSRF token -->
+<input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+<style>
+    .product-detail-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .product-main {
+        display: flex;
+        gap: 40px;
+        padding: 30px;
+        flex-wrap: wrap;
+    }
+    .product-gallery {
+        flex: 1;
+        min-width: 300px;
+    }
+    .main-image {
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid #eee;
+    }
+    .product-image {
+        width: 100%;
+        display: block;
+    }
+    .product-info {
+        flex: 1;
+        min-width: 300px;
+    }
+    .product-title {
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
+    .product-caption {
+        color: #666;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #eee;
+    }
+    .meta-row {
+        display: flex;
+        margin-bottom: 20px;
+        align-items: center;
+    }
+    .meta-label {
+        width: 70px;
+        color: #666;
+    }
+    .price {
+        font-size: 28px;
+        color: #ff5722;
+        font-weight: bold;
+    }
+    .stock {
+        color: #4caf50;
+    }
+    .spec-options {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .spec-option {
+        position: relative;
+    }
+    .spec-option input {
+        position: absolute;
+        opacity: 0;
+    }
+    .spec-name {
+        padding: 8px 18px;
+        border: 1px solid #ddd;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .spec-option input:checked + .spec-name {
+        border-color: #667eea;
+        background: #667eea;
+        color: white;
+    }
+    .quantity-control {
+        display: flex;
+        align-items: center;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .quantity-btn {
+        width: 36px;
+        height: 36px;
+        border: none;
+        background: #f5f5f5;
+        cursor: pointer;
+        font-size: 18px;
+    }
+    .quantity-input {
+        width: 60px;
+        height: 36px;
+        text-align: center;
+        border: none;
+        border-left: 1px solid #ddd;
+        border-right: 1px solid #ddd;
+    }
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        margin-top: 30px;
+    }
+    .btn {
+        flex: 1;
+        height: 48px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .add-to-cart {
+        background: #ff9800;
+        color: white;
+    }
+    .add-to-cart:hover {
+        background: #f57c00;
+    }
+    .buy-now {
+        background: #ff5722;
+        color: white;
+    }
+    .buy-now:hover {
+        background: #e64a19;
+    }
+    .product-detail {
+        padding: 30px;
+        border-top: 1px solid #eee;
+    }
+    .detail-title {
+        font-size: 18px;
+        margin-bottom: 20px;
+        padding-left: 12px;
+        border-left: 3px solid #667eea;
+    }
+    .detail-content {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    .detail-image {
+        max-width: 100%;
+        border-radius: 8px;
+    }
+
+    /* ===================== 评价样式 ===================== */
+    .product-reviews {
+        padding: 30px;
+        border-top: 1px solid #eee;
+    }
+    .btn-review {
+        display: inline-block;
+        padding: 10px 25px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 25px;
+        text-decoration: none;
+        margin-bottom: 20px;
+        transition: all 0.3s;
+    }
+    .btn-review:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102,126,234,0.4);
+    }
+    .review-tip {
+        padding: 12px 18px;
+        background: #fff3e0;
+        color: #e65100;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        font-size: 14px;
+    }
+    .review-stats {
+        display: flex;
+        padding: 15px 20px;
+        background: #f8f9fa;
+        border-radius: 12px;
+        margin-bottom: 25px;
+    }
+    .stars {
+        color: #ffc107;
+        font-size: 20px;
+    }
+    .review-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    .review-item {
+        padding: 18px 20px;
+        background: #fafafa;
+        border-radius: 12px;
+        border-left: 4px solid #667eea;
+    }
+    .review-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        font-size: 14px;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+    .review-rating {
+        color: #ffc107;
+        margin-left: 10px;
+    }
+    .review-content {
+        color: #333;
+        line-height: 1.8;
+        font-size: 14px;
+    }
+    .review-actions {
+        text-align: right;
+        margin-top: 12px;
+        padding-top: 10px;
+        border-top: 1px solid #eee;
+    }
+    .review-actions a {
+        margin-left: 15px;
+        color: #667eea;
+        text-decoration: none;
+        font-size: 14px;
+    }
+    .review-actions a:hover {
+        text-decoration: underline;
+    }
+    .no-reviews {
+        text-align: center;
+        padding: 40px;
+        color: #999;
+        font-size: 16px;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 数量加减
+        const minusBtn = document.querySelector('.quantity-btn.minus');
+        const plusBtn = document.querySelector('.quantity-btn.plus');
+        const quantityInput = document.getElementById('quantity-input');
+        const maxStock = {{ shangpin.stock }};
+
+        if (minusBtn && plusBtn && quantityInput) {
+            minusBtn.onclick = function() {
+                let v = parseInt(quantityInput.value);
+                if (v > 1) quantityInput.value = v - 1;
+            };
+            plusBtn.onclick = function() {
+                let v = parseInt(quantityInput.value);
+                if (v < maxStock) quantityInput.value = v + 1;
+                else alert('库存不足，最多购买 ' + maxStock + ' 件');
+            };
+        }
+
+        // 获取选中的规格ID
+        function getSelectedGuigeId() {
+            const selectedRadio = document.querySelector('input[name="guige_id"]:checked');
+            return selectedRadio ? selectedRadio.value : '0';
+        }
+
+        // 加入购物车
+        const addCartBtn = document.getElementById('add-to-cart-btn');
+        if (addCartBtn) {
+            addCartBtn.onclick = function() {
+                const quantity = quantityInput ? parseInt(quantityInput.value) : 1;
+                const guigeId = getSelectedGuigeId();
+
+                const formData = new FormData();
+                formData.append('quantity', quantity);
+                formData.append('guige_id', guigeId);
+
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+                let token = '';
+                if (csrfToken) {
+                    token = csrfToken.value;
+                } else {
+                    const cookies = document.cookie.split(';');
+                    for (let cookie of cookies) {
+                        if (cookie.trim().startsWith('csrftoken=')) {
+                            token = cookie.trim().substring(10);
+                            break;
+                        }
+                    }
+                }
+
+                fetch("{% url 'goods:addcart' shangpin.id %}", {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': token,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('✅ 已添加到购物车！');
+                        const cartCount = document.querySelector('.cart-count');
+                        if (cartCount) {
+                            let count = parseInt(cartCount.textContent) || 0;
+                            cartCount.textContent = count + quantity;
+                        }
+                    } else {
+                        alert('❌ 添加失败：' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('网络错误，请稍后重试');
+                });
+            };
+        }
+
+        // 立即购买
+        const buyNowBtn = document.getElementById('buy-now-btn');
+        if (buyNowBtn) {
+            buyNowBtn.onclick = function() {
+                const quantity = quantityInput ? parseInt(quantityInput.value) : 1;
+                const guigeId = getSelectedGuigeId();
+
+                const formData = new FormData();
+                formData.append('quantity', quantity);
+                formData.append('guige_id', guigeId);
+
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+                let token = '';
+                if (csrfToken) {
+                    token = csrfToken.value;
+                } else {
+                    const cookies = document.cookie.split(';');
+                    for (let cookie of cookies) {
+                        if (cookie.trim().startsWith('csrftoken=')) {
+                            token = cookie.trim().substring(10);
+                            break;
+                        }
+                    }
+                }
+
+                fetch("{% url 'goods:addcart' shangpin.id %}", {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': token,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = "{% url 'goods:carts' %}";
+                    } else {
+                        alert('❌ 添加失败：' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('网络错误，请稍后重试');
+                });
+            };
+        }
+    });
+</script>
+{% endblock %}

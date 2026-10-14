@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}收货地址管理 - 跳蚤市场{% endblock %}
+
+{% block content %}
+<div class="address-list-container">
+    <div class="address-header">
+        <h2>📦 我的收货地址</h2>
+        <a href="{% url 'goods:address_add' %}" class="btn-add">➕ 添加新地址</a>
+    </div>
+    
+    {% if addresses %}
+    <div class="address-grid">
+        {% for addr in addresses %}
+        <div class="address-card {% if addr.is_default %}default{% endif %}">
+            {% if addr.is_default %}
+            <div class="default-badge">默认地址</div>
+            {% endif %}
+            
+            <div class="address-info">
+                <div class="receiver-info">
+                    <span class="receiver">{{ addr.receiver }}</span>
+                    <span class="phone">{{ addr.phone }}</span>
+                </div>
+                <div class="address-detail">
+                    {{ addr.province }} {{ addr.city }} {{ addr.district }} {{ addr.detail }}
+                </div>
+            </div>
+            
+            <div class="address-actions">
+                {% if not addr.is_default %}
+                <a href="{% url 'goods:set_default' addr.id %}" class="btn-default">设为默认</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-address">
+        <img src="{% static 'images/empty-address.png' %}" alt="暂无地址" style="width: 150px; opacity: 0.5;">
+        <p>暂无收货地址</p>
+        <p class="hint">添加收货地址后，下单更方便哦~</p>
+        <a href="{% url 'goods:address_add' %}" class="btn-add-first">+ 添加第一个地址</a>
+    </div>
+    {% endif %}
+    
+    <div class="back-link">
+        <a href="{% url 'goods:index' %}" class="btn-back">← 返回首页</a>
+    </div>
+</div>
+
+<style>
+    .address-list-container {
+        max-width: 1000px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+    
+    .address-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .address-header h2 {
+        font-size: 24px;
+        color: #333;
+        margin: 0;
+    }
+    
+    .btn-add {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+    
+    .btn-add:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102,126,234,0.4);
+    }
+    
+    .address-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 20px;
+    }
+    
+    .address-card {
+        background: white;
+        border: 2px solid #eee;
+        border-radius: 16px;
+        padding: 20px;
+        position: relative;
+        transition: all 0.3s;
+    }
+    
+    .address-card:hover {
+        border-color: #667eea;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+    
+    .address-card.default {
+        border-color: #667eea;
+        background: #f8f7ff;
+    }
+    
+    .default-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: #667eea;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+    }
+    
+    .address-info {
+        margin-bottom: 15px;
+    }
+    
+    .receiver-info {
+        margin-bottom: 10px;
+    }
+    
+    .receiver {
+        font-size: 16px;
+        font-weight: bold;
+        color: #333;
+        margin-right: 15px;
+    }
+    
+    .phone {
+        color: #666;
+        font-size: 14px;
+    }
+    
+    .address-detail {
+        color: #666;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+    
+    .address-actions {
+        text-align: right;
+        padding-top: 10px;
+        border-top: 1px solid #eee;
+    }
+    
+    .btn-default {
+        color: #667eea;
+        text-decoration: none;
+        font-size: 14px;
+    }
+    
+    .btn-default:hover {
+        text-decoration: underline;
+    }
+    
+    .empty-address {
+        text-align: center;
+        padding: 80px 20px;
+        background: white;
+        border-radius: 16px;
+    }
+    
+    .empty-address p {
+        color: #999;
+        margin: 10px 0;
+    }
+    
+    .empty-address .hint {
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+    
+    .btn-add-first {
+        display: inline-block;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 12px 30px;
+        border-radius: 25px;
+        text-decoration: none;
+        margin-top: 10px;
+    }
+    
+    .back-link {
+        margin-top: 30px;
+        text-align: center;
+    }
+    
+    .btn-back {
+        color: #666;
+        text-decoration: none;
+    }
+    
+    .btn-back:hover {
+        color: #667eea;
+    }
+    
+    @media (max-width: 768px) {
+        .address-grid {
+            grid-template-columns: 1fr;
+        }
+        .address-header {
+            flex-direction: column;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}

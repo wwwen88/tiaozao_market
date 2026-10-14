@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>跳蚤市场 - 登录</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 450px;
+            margin: 80px auto;
+            padding: 40px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+            font-size: 28px;
+        }
+
+        .success-message {
+            color: #43a047;
+            background-color: #e8f5e9;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .error-message {
+            color: #e53935;
+            background-color: #ffebee;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        form div {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+
+        .forgot-password {
+            text-align: right;
+            margin: -10px 0 15px 0;
+        }
+
+        .forgot-password a {
+            color: #667eea;
+            font-size: 14px;
+            text-decoration: none;
+        }
+
+        .forgot-password a:hover {
+            text-decoration: underline;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .remember-me input {
+            width: auto;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        button[type="submit"]:hover {
+            transform: translateY(-2px);
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .register-link a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🏪 跳蚤市场登录</h2>
+
+        {% if state %}
+            <div class="success-message">{{ state }}</div>
+        {% endif %}
+
+        {% if account_errmsg %}
+            <div class="error-message">{{ account_errmsg }}</div>
+        {% endif %}
+
+        <form action="{% url 'auth_app:login' %}" method="POST">
+            {% csrf_token %}
+
+            <div>
+                <label for="username">用户名</label>
+                <input type="text" id="username" name="username" placeholder="请输入用户名" value="{{ request.COOKIES.username|default:'' }}">
+            </div>
+
+            <div>
+                <label for="password">密码</label>
+                <input type="password" id="password" name="password" placeholder="请输入密码">
+            </div>
+
+            <!-- 忘记密码链接 -->
+            <div class="forgot-password">
+                <a href="{% url 'auth_app:forgot_password' %}">🔑 忘记密码？</a>
+            </div>
+
+            <div>
+                <label for="role">角色</label>
+                <select id="role" name="role">
+                    <option value="user">普通用户</option>
+                    <option value="admin">管理员</option>
+                </select>
+            </div>
+
+            <div class="remember-me">
+                <input type="checkbox" id="remembered" name="remembered">
+                <label for="remembered">记住我</label>
+            </div>
+
+            <div>
+                <button type="submit">登录</button>
+            </div>
+        </form>
+
+        <div class="register-link">
+            还没有账号？<a href="{% url 'auth_app:register' %}">立即注册</a>
+        </div>
+    </div>
+</body>
+</html>
